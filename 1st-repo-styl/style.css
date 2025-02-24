@@ -1,0 +1,21 @@
+
+#nav{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+#nav1{
+    margin-left:80px ;
+}
+#nav2{
+    display: flex;
+    gap: 15px; 
+    margin-right: 80px; 
+}
+.navlink{
+    text-decoration: none;
+    color: rgb(55, 55, 59); 
+}
+#bgcolor{
+    background-color: beige;
+}

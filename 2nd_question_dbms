@@ -1,0 +1,172 @@
+2) Consider the Employee database, which consists of the following tables where the primary 
+   keys are underlined. 
+
+employee (EmployeeID, EmployeeName, Street, City) 
+works (EmployeeID, CompanyName, Salary) 
+company (CompanyName, City) 
+manages (EmployeeID, ManagerID)
+
+1. Find the company that has the most employees. 
+  ans: SELECT CompanyName 
+       FROM works 
+       GROUP BY CompanyName 
+       ORDER BY COUNT(EmployeeID) DESC 
+       LIMIT 1;
+
+
+2. Find the average salaries at each company. 
+  ans: SELECT CompanyName, AVG(Salary) AS AverageSalary 
+       FROM works 
+       GROUP BY CompanyName;
+
+3. Find all employees who live in Chittagong city, but their company is not in Chittagong.
+  ans: SELECT e.EmployeeName 
+       FROM employee e 
+       JOIN works w ON e.EmployeeID = w.EmployeeID 
+       JOIN company c ON w.CompanyName = c.CompanyName 
+       WHERE e.City = 'Chittagong' AND c.City <> 'Chittagong';
+        
+4. Find the names of all employees who work for First Bank Corporation. 
+  ans: SELECT e.EmployeeName 
+       FROM employee e 
+       JOIN works w ON e.EmployeeID = w.EmployeeID 
+       WHERE w.CompanyName = 'First Bank Corporation';
+
+5. v. Find the names of all employees in this database who do not work for First Bank Corporation.
+  ans: SELECT e.EmployeeName 
+       FROM employee e 
+       JOIN works w ON e.EmployeeID = w.EmployeeID 
+       WHERE w.CompanyName <> 'First Bank Corporation';
+ 
+6. Find the names, cities and salaries of all employees who work for IFIC Bank Ltd.
+  ans: SELECT e.EmployeeName, e.City, w.Salary 
+       FROM employee e 
+       JOIN works w ON e.EmployeeID = w.EmployeeID 
+       WHERE w.CompanyName = 'IFIC Bank Ltd';
+ 
+7. Find the total salaries of each company. 
+  ans: SELECT CompanyName, SUM(Salary) AS TotalSalary 
+       FROM works 
+       GROUP BY CompanyName;
+
+8. Give all employees of First Bank Corporation a 20 percent salary raise.
+  ans: UPDATE works 
+       SET Salary = Salary * 1.2 
+       WHERE CompanyName = 'First Bank Corporation';
+
+9. Find the second highest salary among all employees. 
+  ans: SELECT DISTINCT Salary 
+       FROM works 
+       ORDER BY Salary DESC 
+       LIMIT 1 OFFSET 1;
+
+10. Find the employee’s name, company name and employee city of the employee who earns the 
+    second highest salary in this database. 
+    ans: SELECT e.EmployeeName, w.CompanyName, e.City 
+        FROM employee e 
+        JOIN works w ON e.EmployeeID = w.EmployeeID 
+        WHERE w.Salary = (
+            SELECT DISTINCT Salary 
+            FROM works 
+            ORDER BY Salary DESC 
+            LIMIT 1 OFFSET 1
+        );
+
+11. Find the second highest salary among all employees using a ranking method. 
+ ans: SELECT Salary 
+      FROM (
+          SELECT Salary, RANK() OVER (ORDER BY Salary DESC) AS ranking 
+          FROM works
+      ) ranked_salaries 
+      WHERE ranking = 2;
+
+12. Find the second highest salary among employees.
+  ans: SELECT MAX(Salary) 
+       FROM works 
+       WHERE Salary < (SELECT MAX(Salary) FROM works);
+
+13. Find companies with more than 5 employees.
+  ans: SELECT CompanyName 
+       FROM works 
+       GROUP BY CompanyName 
+       HAVING COUNT(EmployeeID) > 5;
+ 
+14. Give all employees of First Bank Corporation a 20% salary raise. 
+  ans: UPDATE works 
+       SET Salary = Salary * 1.2 
+       WHERE CompanyName = 'First Bank Corporation';
+
+15. Delete all records where an employee has no manager. 
+  ans: DELETE FROM manages
+       WHERE ManagerID IS NULL;
+
+16. Assign a new manager to employees who currently have no manager. 
+  ans: UPDATE manages
+       SET ManagerID = (SELECT EmployeeID FROM employee WHERE EmployeeName = 'John Doe' LIMIT 1)
+       WHERE ManagerID IS NULL;
+
+
+
+
+# Creat the tables:
+
+-- Employee Table
+CREATE TABLE employee (
+    EmployeeID INT PRIMARY KEY AUTO_INCREMENT,
+    EmployeeName VARCHAR(100),
+    Street VARCHAR(100),
+    City VARCHAR(50)
+);
+
+-- Works Table
+CREATE TABLE works (
+    EmployeeID INT,
+    CompanyName VARCHAR(100),
+    Salary DECIMAL(10,2),
+    PRIMARY KEY (EmployeeID, CompanyName),
+    FOREIGN KEY (EmployeeID) REFERENCES employee(EmployeeID)
+);
+
+-- Company Table
+CREATE TABLE company (
+    CompanyName VARCHAR(100) PRIMARY KEY,
+    City VARCHAR(50)
+);
+
+-- Manages Table
+CREATE TABLE manages (
+    EmployeeID INT,
+    ManagerID INT,
+    PRIMARY KEY (EmployeeID, ManagerID),
+    FOREIGN KEY (EmployeeID) REFERENCES employee(EmployeeID),
+    FOREIGN KEY (ManagerID) REFERENCES employee(EmployeeID)
+);
+
+
+# Insert Sample Data
+
+-- Insert Employees
+INSERT INTO employee (EmployeeName, Street, City) VALUES 
+('Alice', '123 Main St', 'Dhaka'),
+('Bob', '456 Lake Rd', 'Chittagong'),
+('Charlie', '789 Hill St', 'Dhaka'),
+('David', '321 Beach Rd', 'Chittagong');
+
+-- Insert Companies
+INSERT INTO company (CompanyName, City) VALUES 
+('First Bank Corporation', 'Dhaka'),
+('IFIC Bank Ltd', 'Dhaka'),
+('Tech Solutions', 'Chittagong');
+
+-- Insert Works (Employment details)
+INSERT INTO works (EmployeeID, CompanyName, Salary) VALUES 
+(1, 'First Bank Corporation', 50000),
+(2, 'IFIC Bank Ltd', 60000),
+(3, 'Tech Solutions', 55000),
+(4, 'First Bank Corporation', 45000);
+
+-- Insert Managers
+INSERT INTO manages (EmployeeID, ManagerID) VALUES 
+(1, 3),
+(2, 4),
+(3, 4);

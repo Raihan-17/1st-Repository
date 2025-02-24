@@ -1,0 +1,33 @@
+1) Consider the Bank database, which consists of the following tables where the primary keys 
+are underlined. 
+
+Branch (BranchName, BranchCity, Assets)  
+Customer (CustomerID,CustomerName,CustomerStreet, CustomerCity)  
+Account (AccountNumber, BranchName, Balance)  
+Loan (LoanNumber, BranchName, Amount)  
+Depositor (CustomerID, AccountNumber)  
+Borrower (CustomerID, LoanNumber ) 
+
+Write SQL queries for the following requirements. 
+1. Find all customers who have account but no loan in bank. 
+2. Delete all loan between 10000 and 25000 
+3. Find the names of all customers who have a loan at Uttara branch. 
+4. Find all the customers who have both loan and account. 
+5. Delete all loans with amount in the range 0 to 500. 
+6. Find the average account balance at each branch. 
+7. Find the name of all branches in the loan relation. 
+8. Deduct 3% service charge from account balance that have both loan and account 
+otherwise deduct 5% charge from account balance. 
+9. Increase all balances by 5 percent. 
+10. Find the number of depositors for each branch. 
+11. Find the largest account balance in the bank. 
+12. Delete all Sajid’s account records. 
+13. Find the second highest account balance in the bank. 
+14. Find all the customers who live in the same city as the branch_city in where they 
+have account but no loan. 
+15. Find branches that have no accounts. 
+16. Find branches where total loan amount is greater than 50,000. 
+17. Retrieve distinct customers who have either an account or a loan. 
+18. Retrieve the branch with the maximum number of accounts. 
+19. Find the maximum loan amount issued in each branch. 
+20. Find customers whose names start with 'A'. 
