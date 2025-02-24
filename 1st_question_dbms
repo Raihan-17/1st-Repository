@@ -10,24 +10,201 @@ Borrower (CustomerID, LoanNumber )
 
 Write SQL queries for the following requirements. 
 1. Find all customers who have account but no loan in bank. 
+  ans: SELECT DISTINCT c.CustomerID, c.CustomerName
+       FROM Customer c
+       JOIN Depositor d ON c.CustomerID = d.CustomerID
+       LEFT JOIN Borrower b ON c.CustomerID = b.CustomerID
+       WHERE b.CustomerID IS NULL;
+
 2. Delete all loan between 10000 and 25000 
+ ans: DELETE FROM Loan
+      WHERE Amount BETWEEN 10000 AND 25000;
+
 3. Find the names of all customers who have a loan at Uttara branch. 
+ans: SELECT DISTINCT c.CustomerName
+     FROM Customer c
+     JOIN Borrower b ON c.CustomerID = b.CustomerID
+     JOIN Loan l ON b.LoanNumber = l.LoanNumber
+     WHERE l.BranchName = 'Uttara';
+
 4. Find all the customers who have both loan and account. 
+ ans: SELECT DISTINCT c.CustomerID, c.CustomerName
+      FROM Customer c
+      JOIN Depositor d ON c.CustomerID = d.CustomerID
+      JOIN Borrower b ON c.CustomerID = b.CustomerID;
+
 5. Delete all loans with amount in the range 0 to 500. 
+ ans: DELETE FROM Loan
+      WHERE Amount BETWEEN 0 AND 500;
+
 6. Find the average account balance at each branch. 
+ans: SELECT BranchName, AVG(Balance) AS AverageBalance
+    FROM Account
+    GROUP BY BranchName;
+
 7. Find the name of all branches in the loan relation. 
+ans: SELECT DISTINCT BranchName
+     FROM Loan;
+
 8. Deduct 3% service charge from account balance that have both loan and account 
 otherwise deduct 5% charge from account balance. 
-9. Increase all balances by 5 percent. 
+ans: UPDATE Account
+     SET Balance = Balance * 0.97
+     WHERE AccountNumber IN (
+         SELECT DISTINCT d.AccountNumber
+         FROM Depositor d
+         JOIN Borrower b ON d.CustomerID = b.CustomerID
+     );
+     
+     UPDATE Account
+     SET Balance = Balance * 0.95
+     WHERE AccountNumber NOT IN (
+         SELECT DISTINCT d.AccountNumber
+         FROM Depositor d
+         JOIN Borrower b ON d.CustomerID = b.CustomerID
+     );
+
+9. Increase all balances by 5 percent.
+ans: UPDATE Account
+     SET Balance = Balance * 1.05;
+
 10. Find the number of depositors for each branch. 
+ans: SELECT a.BranchName, COUNT(DISTINCT d.CustomerID) AS TotalDepositors
+     FROM Account a
+     JOIN Depositor d ON a.AccountNumber = d.AccountNumber
+     GROUP BY a.BranchName;
+
 11. Find the largest account balance in the bank. 
-12. Delete all Sajid’s account records. 
-13. Find the second highest account balance in the bank. 
+ ans: SELECT MAX(Balance) AS LargestBalance
+      FROM Account;
+
+12. Delete all Sajid’s account records.
+ans: DELETE FROM Depositor
+     WHERE CustomerID IN (SELECT CustomerID FROM Customer WHERE CustomerName = 'Sajid');
+     
+     DELETE FROM Account
+     WHERE AccountNumber IN (SELECT AccountNumber FROM Depositor WHERE CustomerID IN 
+         (SELECT CustomerID FROM Customer WHERE CustomerName = 'Sajid'));
+ 
+13. Find the second highest account balance in the bank.
+ans: SELECT DISTINCT Balance
+     FROM Account
+     ORDER BY Balance DESC
+     LIMIT 1 OFFSET 1;
+ 
 14. Find all the customers who live in the same city as the branch_city in where they 
 have account but no loan. 
+ans: SELECT DISTINCT c.CustomerName, c.CustomerCity, a.BranchName, b.BranchCity
+     FROM Customer c
+     JOIN Depositor d ON c.CustomerID = d.CustomerID
+     JOIN Account a ON d.AccountNumber = a.AccountNumber
+     JOIN Branch b ON a.BranchName = b.BranchName
+     LEFT JOIN Borrower br ON c.CustomerID = br.CustomerID
+     WHERE c.CustomerCity = b.BranchCity AND br.CustomerID IS NULL;
+
 15. Find branches that have no accounts. 
+ans: SELECT BranchName
+     FROM Branch
+     WHERE BranchName NOT IN (SELECT DISTINCT BranchName FROM Account);
+
 16. Find branches where total loan amount is greater than 50,000. 
+ans: SELECT BranchName, SUM(Amount) AS TotalLoan
+     FROM Loan
+     GROUP BY BranchName
+     HAVING SUM(Amount) > 50000;
+
 17. Retrieve distinct customers who have either an account or a loan. 
+ans: SELECT DISTINCT CustomerID, CustomerName
+     FROM Customer
+     WHERE CustomerID IN (SELECT CustomerID FROM Depositor)
+        OR CustomerID IN (SELECT CustomerID FROM Borrower);
+     
 18. Retrieve the branch with the maximum number of accounts. 
+ans:SELECT BranchName
+    FROM Account
+    GROUP BY BranchName
+    ORDER BY COUNT(AccountNumber) DESC
+    LIMIT 1;
+
 19. Find the maximum loan amount issued in each branch. 
-20. Find customers whose names start with 'A'. 
+ans: SELECT BranchName, MAX(Amount) AS MaxLoan
+     FROM Loan
+     GROUP BY BranchName;
+
+20. Find customers whose names start with 'A'.
+ans: SELECT CustomerID, CustomerName
+     FROM Customer
+     WHERE CustomerName LIKE 'A%';
+
+#creat table:
+
+CREATE TABLE Branch (
+    BranchName VARCHAR(50) PRIMARY KEY,
+    BranchCity VARCHAR(50),
+    Assets DECIMAL(15,2)
+);
+
+CREATE TABLE Customer (
+    CustomerID INT PRIMARY KEY AUTO_INCREMENT,
+    CustomerName VARCHAR(100),
+    CustomerStreet VARCHAR(100),
+    CustomerCity VARCHAR(50)
+);
+
+CREATE TABLE Account (
+    AccountNumber INT PRIMARY KEY AUTO_INCREMENT,
+    BranchName VARCHAR(50),
+    Balance DECIMAL(15,2),
+    FOREIGN KEY (BranchName) REFERENCES Branch(BranchName) ON DELETE CASCADE
+);
+
+CREATE TABLE Loan (
+    LoanNumber INT PRIMARY KEY AUTO_INCREMENT,
+    BranchName VARCHAR(50),
+    Amount DECIMAL(15,2),
+    FOREIGN KEY (BranchName) REFERENCES Branch(BranchName) ON DELETE CASCADE
+);
+
+CREATE TABLE Depositor (
+    CustomerID INT,
+    AccountNumber INT,
+    PRIMARY KEY (CustomerID, AccountNumber),
+    FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID) ON DELETE CASCADE,
+    FOREIGN KEY (AccountNumber) REFERENCES Account(AccountNumber) ON DELETE CASCADE
+);
+
+CREATE TABLE Borrower (
+    CustomerID INT,
+    LoanNumber INT,
+    PRIMARY KEY (CustomerID, LoanNumber),
+    FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID) ON DELETE CASCADE,
+    FOREIGN KEY (LoanNumber) REFERENCES Loan(LoanNumber) ON DELETE CASCADE
+);
+
+#Insert Sample Data:
+
+INSERT INTO Branch (BranchName, BranchCity, Assets) VALUES 
+('Uttara', 'Dhaka', 5000000),
+('Gulshan', 'Dhaka', 7000000),
+('Chittagong', 'Chittagong', 6000000);
+
+INSERT INTO Customer (CustomerName, CustomerStreet, CustomerCity) VALUES 
+('Sajid', 'Road 1', 'Dhaka'),
+('Ayesha', 'Street 5', 'Chittagong'),
+('Rahim', 'Lane 7', 'Sylhet');
+
+INSERT INTO Account (BranchName, Balance) VALUES 
+('Uttara', 50000),
+('Gulshan', 75000),
+('Chittagong', 60000);
+
+INSERT INTO Loan (BranchName, Amount) VALUES 
+('Uttara', 20000),
+('Gulshan', 50000),
+('Chittagong', 30000);
+
+INSERT INTO Depositor (CustomerID, AccountNumber) VALUES 
+(1, 1), (2, 2), (3, 3);
+
+INSERT INTO Borrower (CustomerID, LoanNumber) VALUES 
+(1, 1), (2, 2);
